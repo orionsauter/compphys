@@ -54,9 +54,7 @@ def fuzzyIndex(y,m,n):
     y2 = [np.floor(y[0]),np.ceil(y[1])]
     y3 = [np.ceil(y[0]),np.floor(y[1])]
     y4 = [np.ceil(y[0]),np.ceil(y[1])]
-    #dfloor = np.sqrt(np.sum((y - y1)**2))
-    #dceil = np.sqrt(np.sum((y4 - y)**2))
-    #dfc = np.sqrt(dfloor**2 + dceil**2)
+    
     dist[y1[0],y1[1]] = np.sqrt(np.sum((y - y1)**2))
     dist[y2[0],y2[1]] = np.sqrt(np.sum((y - y2)**2))
     dist[y3[0],y3[1]] = np.sqrt(np.sum((y - y3)**2))
@@ -64,24 +62,25 @@ def fuzzyIndex(y,m,n):
     return dist
 
 source = imread('test.png')
+#source = imread('liu.png')
+plt.imshow(source)
 m = np.size(source,0)
 n = np.size(source,1)
 image = np.zeros([m,n,3])
 inds = np.mgrid[0:m,0:n]
 masses = 1.0/np.sqrt((inds[0]-0.5*m)**2 + (inds[1]-0.5*n)**2)
+#masses = 0.0001*np.ones([m,n])
 #plt.matshow(masses)
 #plt.show()
 for i in range(m):
     for j in range(n):
+        #print str(j+i*m)+'/'+str(m*n)
         x = np.array([i,j])
         a = calcAlpha(x,masses)
         y = x - a
-        ai = np.round_(100*a)
-        #print ai
         mask = fuzzyIndex(y,m,n)
         add = np.array([source[:,:,0]*mask,source[:,:,1]*mask,source[:,:,2]*mask])
-        if (any(ai < 0) or ai[0] >= m or ai[1] >= n):
-            continue
-        image[ai[0],ai[1],:] = image[ai[0],ai[1],:] + np.sum(np.sum(add,axis=1),axis=1)
+        image[i,j,:] = image[i,j,:] + np.sum(np.sum(add,axis=1),axis=1)
+plt.figure()
 plt.imshow(image)
 plt.show()
