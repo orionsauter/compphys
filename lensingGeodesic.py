@@ -1,3 +1,6 @@
+## @package lensingGeodesic
+#  Generate image due to gravitational lensing by following geodesics
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint
@@ -6,12 +9,22 @@ G = 1.0
 pi = np.pi
 rho = 0.1
 
-def diffEq(mpf,r):
+## Differential equation for star mass/size
+#
+# @param mpf Array of mass, pressure, and Phi
+# @param r Current radial distance
+def starEq(mpf,r):
+    
     dfdr = G * (mpf[0] + 4.0*pi*r**3*mpf[1])/(r*(r-2*G*mpf[0]))
     dpdr = -G * (rho + mpf[1]) * dfdr
     dmdr = 4.0*pi*r**2*rho
     return np.array([dmdr,dpdr,dfdr])
 
+## Calculate Schwarzschild metric
+#
+# @param r Position in spherical coordinates (r,theta,phi)
+# @param rStar Radial distances corresponding to mpf data
+# @param mpf Array of mass, pressure, and Phi
 def getMetric(r,rStar,mpf):
     gdd = np.zeros([4,4])
     chrudd = np.zeros([4,4,4])
@@ -38,6 +51,12 @@ def getMetric(r,rStar,mpf):
     chrudd[3,2,3] = chrudd[3,3,2] = 1.0/np.tan(r[1])
     return [gdd,chrudd]
 
+## Differential equation for geodesics
+#
+# @param rrd Flat list of (t,r,theta,phi,dt,dr,dtheta,dphi)
+# @param t Parameter for line needed by odeint
+# @param rStar Radial distances corresponding to mpf data
+# @param mpf Array of mass, pressure, and Phi
 def geodesicEq(rrd,t,rStar,mpf):
     r = rrd[0:4]
     rdot = rrd[4:8]
@@ -53,7 +72,7 @@ def geodesicEq(rrd,t,rStar,mpf):
     
 mpf0 = np.array([0.0,0.1,0.0])
 rStar = np.arange(0.1,2.0,0.01)
-out = odeint(diffEq,mpf0,rStar)
+out = odeint(starEq,mpf0,rStar)
 out = np.array(out)
 neg = next(i for i in range(np.size(out,0)) if out[i,1] < 0)
 mpf = out[0:(neg-1),:]
